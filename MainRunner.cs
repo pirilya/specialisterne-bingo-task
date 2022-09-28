@@ -17,7 +17,6 @@ namespace Bingo {
                 var bng = new BingoNumberGenerator();
                 for (var i = 0; i < numPlates; i += 6) {
                     var plates = bng.NextBatch();
-                    Console.WriteLine(String.Join("\n\n", plates.Select(x => x[0,0])));
                 }
                 bng.test();
             }

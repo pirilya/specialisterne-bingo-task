@@ -51,25 +51,51 @@ namespace Bingo {
             }
             return chosens;
         }
-        public void prettyprint(bool[,] boolgrid) {
-            for (var y = 0; y < boolgrid.GetLength(1); y++) {
-                var line = "";
-                for (var x = 0; x < boolgrid.GetLength(0); x++) {
-                    if (boolgrid[x,y]) {
-                        line += "X";
-                    } else {
-                        line += "*";
-                    }
-                }
-                Console.WriteLine(line);
+        // apparently the C# Random doesn't have an array shuffling function?
+        // so i'll write one myself. fortunately fisher-yates is pretty simple
+        public void Shuffle<T> (T[] deck) {
+            for (var i = 0; i < deck.Count(); i++) {
+                var j = Random.Next(i+1);
+                T value = deck[j];
+                deck[j] = deck[i];
+                deck[i] = value;
             }
         }
 
     }
     public class BingoNumberGenerator : RandomUtils {
+
         HashSet<int[]> PreviousPlates { get; set; }
+        int[][] NumbersByColumns { get; set; }
+
         public BingoNumberGenerator () : base() {
             PreviousPlates = new HashSet<int[]>();
+            var NumbersByColumnsList = new List<List<int>>();
+            for (var i = 0; i < 9; i++) {
+                NumbersByColumnsList.Add(Enumerable.Range(i * 10, 10).ToList());
+            }
+            //NumbersByColumnsList[0].Remove(0); // these lines commented out so i can get the simple version working first
+            //NumbersByColumnsList[8].Add(90);
+            NumbersByColumns = NumbersByColumnsList.Select(x => x.ToArray()).ToArray();
+        }
+        List<int>[,] NextBatchNumbers () {
+            // might be more logical to swap the dimensions here, and call with 6,9,4,6? obviously it's equivalent it's just a matter of what makes more sense
+            var ColumnsWithTwo = Choose2D(9, 6, 6, 4);
+            var result = new List<int>[6,9];
+            for (var col = 0; col < 9; col++) {
+                Shuffle(NumbersByColumns[col]);
+                var i = 0;
+                for (var numberOfBatch = 0; numberOfBatch < 6; numberOfBatch++) {
+                    result[numberOfBatch, col] = new List<int>();
+                    var n = ColumnsWithTwo[col, numberOfBatch]? 2 : 1;
+                    for (var m = 0; m < n; m++) {
+                        result[numberOfBatch, col].Add(NumbersByColumns[col][i]);
+                        i++;
+                    }
+                    result[numberOfBatch, col].Sort();
+                }
+            }
+            return result;
         }
         bool[,] NextBlanksMap () {
             var result = new bool[3,9];
@@ -100,8 +126,10 @@ namespace Bingo {
             return output;
         }
         public void test () {
-            var chosens = Choose2D(9, 6, 6, 4);
-            prettyprint(chosens);
+            var batchNumbers = NextBatchNumbers();
+            for (var col = 0; col < 9; col++) {
+                Console.WriteLine(String.Join(",", batchNumbers[0, col]));
+            }
         }
     }
 }
