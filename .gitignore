@@ -13,3 +13,7 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+
+# output from the bingo plate generator
+output
+output.txt
