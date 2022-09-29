@@ -130,6 +130,10 @@ namespace Bingo {
                     numBlanks[col] = ColumnsWithTwo[col, i] ? 1 : 2;
                 }
                 result.Add(Choose2D(9, 3, 4, numBlanks));
+                /*Console.WriteLine(String.Join("", numBlanks));
+                for (var j = 0; j < 3; j++) {
+                    Console.WriteLine(String.Join("", Enumerable.Range(0,9).Select(x => result[i][x,j] ? "X" : ".")));
+                }*/
             }
             return result;
         }
@@ -145,16 +149,16 @@ namespace Bingo {
                 var plate = new int?[3,9];
                 output.Add(plate);
                 for (var col = 0; col < 9; col++) {
-                    Console.WriteLine("plate {0}, col {1}, numbers are {2}, there are {3} blanks, ColumnsWithTwo is {4}",
+                    /*Console.WriteLine("plate {0}, col {1}, numbers are {2}, there are {3} blanks, ColumnsWithTwo is {4}",
                         plateNumber, col, String.Join(",", numbers[plateNumber][col]), 
                         Enumerable.Range(0,3).Select(x => blanks[plateNumber][col, x]).Where(x => x).Count(), 
-                        ColumnsWithTwo[col, plateNumber]);
+                        ColumnsWithTwo[col, plateNumber]);*/
                     var i = 0;
                     for (var row = 0; row < 3; row++) {
                         if (blanks[plateNumber][col, row]) {
                             // no need to do anything, null is the default value of a nullable
                         } else {
-                            Console.WriteLine("{0} {1}",numbers[plateNumber][row].Count(), i);
+                            //Console.WriteLine("{0} {1}",numbers[plateNumber][row].Count(), i);
                             plate[row,col] = numbers[plateNumber][col][i];
                             i++;
                         }
