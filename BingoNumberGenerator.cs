@@ -25,9 +25,23 @@ namespace Bingo {
             }
             return result;
         }
-        public bool[,] Choose2D (int width, int height, int rowsum, int colsum) {
-            if (rowsum * height != colsum * width) {
+        public bool[,] Choose2D (int width, int height, int rowsum, int[] colsums) {
+            if (rowsum * height != colsums.Sum()) {
                 throw new InvalidOperationException("Your sums don't add up!");
+            }
+            // for the purposes of having a functioning stub while we get everything else working, 
+            // let's just manually return the column distribution from the problem sheet example.
+            if (width == 9 && height == 6 && rowsum == 6 && true) {
+                var TheOneFromTheProblemSheet = new bool[,]{{true,false,false,true,true,false},
+                                                            {true,true,false,true,false,true},
+                                                            {false,true,true,false,true,true},
+                                                            {false,true,true,false,true,true},
+                                                            {true,false,true,true,true,false},
+                                                            {false,true,true,false,true,true},
+                                                            {true,false,true,true,true,false},
+                                                            {true,true,false,true,false,true},
+                                                            {true,true,true,true,false,true}};
+                return TheOneFromTheProblemSheet;
             }
             var chosens = new bool[width, height];
             var colcounts = new int[width];
@@ -40,13 +54,13 @@ namespace Bingo {
             }
             var yy = height - 1;
             for (var x = 0; x < width; x++) {
-                if (colcounts[x] == colsum) {
+                if (colcounts[x] == colsums[x]) {
                     // do nothing, it's a bool so it was already initialized to false
-                } else if (colcounts[x] == colsum - 1) {
+                } else if (colcounts[x] == colsums[x] - 1) {
                     chosens[x, yy] = true;
                 } else {
                     // we can't make the sums add up. start over!
-                    return Choose2D(width, height, rowsum, colsum);
+                    return Choose2D(width, height, rowsum, colsums);
                 }
             }
             return chosens;
@@ -65,37 +79,51 @@ namespace Bingo {
     }
     public class BingoNumberGenerator : RandomUtils {
 
-        HashSet<int[]> PreviousPlates { get; set; }
+        HashSet<List<int>[]> PreviousPlates { get; set; }
         int[][] NumbersByColumns { get; set; }
 
         public BingoNumberGenerator () : base() {
-            PreviousPlates = new HashSet<int[]>();
+            PreviousPlates = new HashSet<List<int>[]>();
             var NumbersByColumnsList = new List<List<int>>();
             for (var i = 0; i < 9; i++) {
                 NumbersByColumnsList.Add(Enumerable.Range(i * 10, 10).ToList());
             }
-            //NumbersByColumnsList[0].Remove(0); // these lines commented out so i can get the simple version working first
-            //NumbersByColumnsList[8].Add(90);
+            NumbersByColumnsList[0].Remove(0);
+            NumbersByColumnsList[8].Add(90);
             NumbersByColumns = NumbersByColumnsList.Select(x => x.ToArray()).ToArray();
         }
-        List<int>[,] NextBatchNumbers () {
-            // might be more logical to swap the dimensions here, and call with 6,9,4,6? obviously it's equivalent it's just a matter of what makes more sense
-            var ColumnsWithTwo = Choose2D(9, 6, 6, 4);
-            var result = new List<int>[6,9];
+        List<List<int>[]> NextBatchNumbers () {
+            var numberOfNumbers = NumbersByColumns.Select(x => x.Length - 6).ToArray();
+            var ColumnsWithTwo = Choose2D(9, 6, 6, numberOfNumbers);
+            var result = new List<List<int>[]>();
+            for (var i = 0; i < 6; i++) {
+                result.Add(new List<int>[9]);
+            }
             for (var col = 0; col < 9; col++) {
                 Shuffle(NumbersByColumns[col]);
                 var i = 0;
                 for (var numberOfBatch = 0; numberOfBatch < 6; numberOfBatch++) {
-                    result[numberOfBatch, col] = new List<int>();
+                    result[numberOfBatch][col] = new List<int>();
                     var n = ColumnsWithTwo[col, numberOfBatch]? 2 : 1;
                     for (var m = 0; m < n; m++) {
-                        result[numberOfBatch, col].Add(NumbersByColumns[col][i]);
+                        result[numberOfBatch][col].Add(NumbersByColumns[col][i]);
                         i++;
                     }
-                    result[numberOfBatch, col].Sort();
+                    result[numberOfBatch][col].Sort();
                 }
             }
+            foreach (var plate in result) {
+                // if just one of our generated plates is a duplicate, we have to throw out this result and start over
+                if (PreviousPlates.Contains(plate)) {
+                    return NextBatchNumbers();
+                }
+            }
+            // but if that's not the case, we can add these 6 numbersets to the list, and return them
+            foreach (var plate in result) {
+                PreviousPlates.Add(plate);
+            }
             return result;
+            // note: we might want to restructure this, so Choose2D doesn't get called again when there's a fail, just reassign the numbers
         }
         bool[,] NextBlanksMap () {
             var result = new bool[3,9];
@@ -126,9 +154,13 @@ namespace Bingo {
             return output;
         }
         public void test () {
+            var result = new List<List<int>[]>{ new List<int>[9], new List<int>[9], new List<int>[9] };
             var batchNumbers = NextBatchNumbers();
-            for (var col = 0; col < 9; col++) {
-                Console.WriteLine(String.Join(",", batchNumbers[0, col]));
+            for (var plate = 0; plate < 6; plate++) {
+                Console.WriteLine("Plate # {0} of the batch", plate);
+                for (var col = 0; col < 9; col++) {
+                    Console.WriteLine(String.Join(",", batchNumbers[plate][col]));
+                }
             }
         }
     }
