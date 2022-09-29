@@ -29,41 +29,51 @@ namespace Bingo {
             if (rowsum * height != colsums.Sum()) {
                 throw new InvalidOperationException("Your sums don't add up!");
             }
-            // for the purposes of having a functioning stub while we get everything else working, 
-            // let's just manually return the column distribution from the problem sheet example.
-            if (width == 9 && height == 6 && rowsum == 6 && true) {
-                var TheOneFromTheProblemSheet = new bool[,]{{true,false,false,true,true,false},
-                                                            {true,true,false,true,false,true},
-                                                            {false,true,true,false,true,true},
-                                                            {false,true,true,false,true,true},
-                                                            {true,false,true,true,true,false},
-                                                            {false,true,true,false,true,true},
-                                                            {true,false,true,true,true,false},
-                                                            {true,true,false,true,false,true},
-                                                            {true,true,true,true,false,true}};
-                return TheOneFromTheProblemSheet;
-            }
-            var chosens = new bool[width, height];
-            var colcounts = new int[width];
-            for (var y = 0; y < height-1; y++) {
-                var rowChosens = RandomSubset(0, width, rowsum);
-                foreach (var x in rowChosens) {
-                    chosens[x,y] = true;
-                    colcounts[x]++;
+            var weights = new int[width];
+            Array.Copy(colsums, weights, width);
+            var rowsums = new int[height];
+            Array.Fill(rowsums, rowsum);
+            var chosens = new bool[height, width];
+            for (var row = 0; row < height; row++) {
+                for (var col = 0; col < width; col++) {
+                    if (weights[col] == height - row) {
+                        for (var i = row; i < height; i++) {
+                            chosens[i, col] = true;
+                            rowsums[i]--;
+                        }
+                        weights[col] = 0;
+                    } // we don't have to equally check for the weight 0 case, that works just fine without special handling 
+                }
+                var rowChoices = WeightedChoose(weights, rowsums[row]);
+                for (var col = 0; col < width; col++) {
+                    if (rowChoices[col]) {
+                        chosens[row, col] = true;
+                        weights[col]--;
+                    }
                 }
             }
-            var yy = height - 1;
-            for (var x = 0; x < width; x++) {
-                if (colcounts[x] == colsums[x]) {
-                    // do nothing, it's a bool so it was already initialized to false
-                } else if (colcounts[x] == colsums[x] - 1) {
-                    chosens[x, yy] = true;
-                } else {
-                    // we can't make the sums add up. start over!
-                    return Choose2D(width, height, rowsum, colsums);
+            return chosens;            
+        }
+        public bool[] WeightedChoose (int[] weightsIn, int numTrues) {
+            var weights = new int[weightsIn.Length];
+            Array.Copy(weightsIn, weights, weights.Length);
+            var weightsum = weights.Sum();
+            var result = new bool[weights.Length];
+            for (var i = 0; i < numTrues; i++) {
+                weightsum = weights.Sum();
+                var choice = Random.Next(weightsum);
+                var runningSum = 0;
+                var j = 0;
+                while (runningSum <= choice) {
+                    runningSum += weights[j];
+                    j++;
                 }
+                j--;
+                result[j] = true;
+                weightsum -= weights[j];
+                weights[j] = 0;
             }
-            return chosens;
+            return result;
         }
         // apparently the C# Random doesn't have an array shuffling function?
         // so i'll write one myself. fortunately fisher-yates is pretty simple
@@ -169,7 +179,7 @@ namespace Bingo {
         }
         public void test () {
             var plates = NextBatch();
-            for (var plate = 0; plate < 6; plate++) {
+            /*for (var plate = 0; plate < 6; plate++) {
                 Console.WriteLine("Plate # {0} of the batch", plate);
                 for (var row = 0; row < 3; row++) {
                     var output = new List<string>();
@@ -178,7 +188,7 @@ namespace Bingo {
                     }
                     Console.WriteLine(String.Join(",", output));
                 }
-            }
+            }*/
         }
     }
 }
