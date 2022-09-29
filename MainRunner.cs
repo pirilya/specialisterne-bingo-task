@@ -9,22 +9,22 @@ namespace Bingo {
             var filepath = Path.Join(Directory.GetCurrentDirectory(), filename);
             using (StreamWriter writer = new StreamWriter(filepath)) {
                 var bng = new BingoNumberGenerator();
-            for (var i = 0; i < numPlates; i += 6) {
-                var plates = bng.NextBatch();
-                writer.WriteLine("####################");
-                writer.WriteLine("# Sheet {0,-10} #", i / 6);
-                writer.WriteLine("####################");
-                for (var plateNumber = 0; plateNumber < 6; plateNumber++) {
-                    writer.WriteLine("{0} | Plate {1}", title, i + plateNumber + 1);
-                    for (var row = 0; row < 3; row++) {
-                        for (var col = 0; col < 9; col++) {
-                            writer.Write("{0,3}", plates[plateNumber][row,col]);
+                for (var i = 0; i < numPlates; i += 6) {
+                    var plates = bng.NextBatch();
+                    writer.WriteLine("####################");
+                    writer.WriteLine("# Sheet {0,-10} #", i / 6);
+                    writer.WriteLine("####################");
+                    for (var plateNumber = 0; plateNumber < 6; plateNumber++) {
+                        writer.WriteLine("{0} | Plate {1}", title, i + plateNumber + 1);
+                        for (var row = 0; row < 3; row++) {
+                            for (var col = 0; col < 9; col++) {
+                                writer.Write("{0,3}", plates[plateNumber][row,col]);
+                            }
+                            writer.Write("\n");
                         }
-                        writer.Write("\n");
+                        writer.WriteLine("---");
                     }
-                    writer.WriteLine("---");
                 }
-            }
             }
             
         }
