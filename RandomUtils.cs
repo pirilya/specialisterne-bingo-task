@@ -3,52 +3,39 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Bingo {
-    // We probably want to define a BingoPlate class actually. Have it inherit from whichever complicated structure of
-    // lists of arrays I decide on, and put nothing inside the class definition, then it's basically a type alias.
     public class RandomUtils {
         Random Random { get; set; }
         public RandomUtils() {
             Random = new Random();
         }
-        // i feel like this isn't a good name for this function but i can't think of a better one
-        public int[] RandomSubset (int min, int max, int numChosen) {
-            var result = new int[numChosen];
-            for (var i = 0; i < numChosen; i++) {
-                result[i] = Random.Next(min, max - numChosen + 1);
-            }
-            for (var i = 0; i < numChosen; i++) {
-                for (var j = i + 1; j < numChosen; j++) {
-                    if (result[i] <= result[j]) {
-                        result[j]++;
-                    }
-                }
-            }
-            return result;
-        }
-        public bool[,] Choose2D (int width, int height, int rowsum, int[] colsums) {
-            if (rowsum * height != colsums.Sum()) {
+        public bool[,] Choose2D (int[] rowsumsIn, int[] colsumsIn) {
+            if (rowsumsIn.Sum() != colsumsIn.Sum()) {
                 throw new InvalidOperationException("Your sums don't add up!");
             }
-            var weights = new int[width];
-            Array.Copy(colsums, weights, width);
+            var width = colsumsIn.Length;
+            var colsums = new int[width];
+            Array.Copy(colsumsIn, colsums, width);
+
+            var height = rowsumsIn.Length;
             var rowsums = new int[height];
-            Array.Fill(rowsums, rowsum);
+            Array.Copy(rowsumsIn, rowsums, height);
+            
             var chosens = new bool[height, width];
             for (var row = 0; row < height; row++) {
                 for (var col = 0; col < width; col++) {
-                    if (weights[col] == height - row) {
+                    if (colsums[col] == height - row) {
                         for (var i = row; i < height; i++) {
                             chosens[i, col] = true;
                             rowsums[i]--;
                         }
-                        weights[col] = 0;
+                        colsums[col] = 0;
                     } // we don't have to equally check for the weight 0 case, that works just fine without special handling 
                 }
-                var rowChoices = WeightedChoose(weights, rowsums[row]);
+                var rowChoices = WeightedChoose(colsums, rowsums[row]);
                 for (var col = 0; col < width; col++) {
                     if (rowChoices[col]) {
                         chosens[row, col] = true;
-                        weights[col]--;
+                        colsums[col]--;
                     }
                 }
             }

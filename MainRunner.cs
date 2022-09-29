@@ -16,9 +16,18 @@ namespace Bingo {
                 }
                 var bng = new BingoNumberGenerator();
                 for (var i = 0; i < numPlates; i += 6) {
-                    //var plates = bng.NextBatch();
+                    var plates = bng.NextBatch();
+                    for (var plateNumber = 0; plateNumber < 6; plateNumber++) {
+                        Console.WriteLine("---");
+                        Console.WriteLine("Plate {0}", i + plateNumber + 1);
+                        for (var row = 0; row < 3; row++) {
+                            for (var col = 0; col < 9; col++) {
+                                Console.Write("{0,3}", plates[plateNumber][row,col]);
+                            }
+                            Console.Write("\n");
+                        }
+                    }
                 }
-                bng.test();
             }
         }
     }

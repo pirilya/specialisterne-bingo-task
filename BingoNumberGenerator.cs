@@ -28,7 +28,7 @@ namespace Bingo {
                 var i = 0;
                 for (var numberOfBatch = 0; numberOfBatch < 6; numberOfBatch++) {
                     result[numberOfBatch][col] = new List<int>();
-                    var n = ColumnsWithTwo[col, numberOfBatch]? 2 : 1;
+                    var n = ColumnsWithTwo[numberOfBatch, col]? 2 : 1;
                     for (var m = 0; m < n; m++) {
                         result[numberOfBatch][col].Add(NumbersByColumns[col][i]);
                         i++;
@@ -50,22 +50,20 @@ namespace Bingo {
         }
         List<bool[,]> NextBatchBlanks (bool[,] ColumnsWithTwo) {
             var result = new List<bool[,]>();
+            var initialRowsum = new int[]{4,4,4};
             for (var i = 0; i < 6; i++) {
                 var numBlanks = new int[9];
                 for (var col = 0; col < 9; col++) {
-                    numBlanks[col] = ColumnsWithTwo[col, i] ? 1 : 2;
+                    numBlanks[col] = ColumnsWithTwo[i, col] ? 1 : 2;
                 }
-                result.Add(Choose2D(9, 3, 4, numBlanks));
-                /*Console.WriteLine(String.Join("", numBlanks));
-                for (var j = 0; j < 3; j++) {
-                    Console.WriteLine(String.Join("", Enumerable.Range(0,9).Select(x => result[i][x,j] ? "X" : ".")));
-                }*/
+                result.Add(Choose2D(initialRowsum, numBlanks));
             }
             return result;
         }
         public List<int?[,]> NextBatch () {
             var numberOfNumbers = NumbersByColumns.Select(x => x.Length - 6).ToArray();
-            var ColumnsWithTwo = Choose2D(9, 6, 6, numberOfNumbers);
+            var twos = new int[]{6,6,6,6,6,6};
+            var ColumnsWithTwo = Choose2D(twos, numberOfNumbers);
 
             var numbers = NextBatchNumbers(ColumnsWithTwo);
             var blanks = NextBatchBlanks(ColumnsWithTwo);
@@ -75,13 +73,9 @@ namespace Bingo {
                 var plate = new int?[3,9];
                 output.Add(plate);
                 for (var col = 0; col < 9; col++) {
-                    /*Console.WriteLine("plate {0}, col {1}, numbers are {2}, there are {3} blanks, ColumnsWithTwo is {4}",
-                        plateNumber, col, String.Join(",", numbers[plateNumber][col]), 
-                        Enumerable.Range(0,3).Select(x => blanks[plateNumber][col, x]).Where(x => x).Count(), 
-                        ColumnsWithTwo[col, plateNumber]);*/
                     var i = 0;
                     for (var row = 0; row < 3; row++) {
-                        if (blanks[plateNumber][col, row]) {
+                        if (blanks[plateNumber][row, col]) {
                             // no need to do anything, null is the default value of a nullable
                         } else {
                             //Console.WriteLine("{0} {1}",numbers[plateNumber][row].Count(), i);
@@ -95,7 +89,7 @@ namespace Bingo {
         }
         public void test () {
             var plates = NextBatch();
-            /*for (var plate = 0; plate < 6; plate++) {
+            for (var plate = 0; plate < 6; plate++) {
                 Console.WriteLine("Plate # {0} of the batch", plate);
                 for (var row = 0; row < 3; row++) {
                     var output = new List<string>();
@@ -104,7 +98,7 @@ namespace Bingo {
                     }
                     Console.WriteLine(String.Join(",", output));
                 }
-            }*/
+            }
         }
     }
 }
