@@ -16,7 +16,7 @@ namespace Bingo {
                 }
                 var bng = new BingoNumberGenerator();
                 for (var i = 0; i < numPlates; i += 6) {
-                    var plates = bng.NextBatch();
+                    //var plates = bng.NextBatch();
                 }
                 bng.test();
             }
