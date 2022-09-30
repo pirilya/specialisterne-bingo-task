@@ -21,6 +21,9 @@ namespace Bingo {
         public void AddPreviousPlate (List<int>[] plate) {
             PreviousPlates.Add(plate);
         }
+        public void Clear () {
+            PreviousPlates.Clear();
+        }
         List<List<int>[]> NextBatchNumbers (bool[,] ColumnsWithTwo) {
             var result = new List<List<int>[]>();
             for (var i = 0; i < 6; i++) {
