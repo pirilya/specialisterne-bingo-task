@@ -18,6 +18,9 @@ namespace Bingo {
             NumbersByColumnsList[8].Add(90);
             NumbersByColumns = NumbersByColumnsList.Select(x => x.ToArray()).ToArray();
         }
+        public void AddPreviousPlate (List<int>[] plate) {
+            PreviousPlates.Add(plate);
+        }
         List<List<int>[]> NextBatchNumbers (bool[,] ColumnsWithTwo) {
             var result = new List<List<int>[]>();
             for (var i = 0; i < 6; i++) {

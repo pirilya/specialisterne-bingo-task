@@ -5,7 +5,7 @@ using System.IO;
 
 namespace Bingo {
     class MainRunner {
-        static void MakeFile(int numSheets, string title, string filename) {
+        static void MakeFile (int numSheets, string title, string filename) {
             var filepath = Path.Join(Directory.GetCurrentDirectory(), filename);
             using (StreamWriter writer = new StreamWriter(filepath)) {
                 var bng = new BingoNumberGenerator();
@@ -26,9 +26,42 @@ namespace Bingo {
                     }
                 }
             }
-            
         }
-        static void Main(string[] args) {
+        static List<int>[] ExtractNumbers (List<string> formattedPlate) {
+            var parsedPlate = new List<int>[9];
+            Array.Fill(parsedPlate, new List<int>());
+            foreach (var line in formattedPlate) {
+                for (var col = 0; col < line.Length / 3; col++) {
+                    var numberStr = line.Substring(col * 3, 3).Trim();
+                    if (numberStr.Length > 0) {
+                        var number = Convert.ToInt32(numberStr);
+                        parsedPlate[col].Add(number);
+                    }
+                }
+            }
+            return parsedPlate;
+        }
+        static void LoadFile (BingoNumberGenerator bng, string filename) {
+            // this function will error if file does not exist, so you gotta handle that in the caller
+            var filepath = Path.Join(Directory.GetCurrentDirectory(), filename);
+            using (StreamReader reader = new StreamReader(filepath)) {
+                string line;
+                var currentPlate = new List<string>();
+                while ((line = reader.ReadLine()) != null) {
+                    if (line[0] == '#') {
+                        // do nothing
+                    } else if (line [0] == '-') {
+                        currentPlate.RemoveAt(0);
+                        bng.AddPreviousPlate(ExtractNumbers(currentPlate));
+                        currentPlate.Clear();
+                    } else {
+                        currentPlate.Add(line);
+                    }
+                }
+            }
+
+        }
+        static void Main (string[] args) {
             if (args.Length != 3) {
                 Console.WriteLine("You need to call this with 3 arguments: the number of bingo plates to generate, the title you want them to have, and the filename to output them to.");
             }
