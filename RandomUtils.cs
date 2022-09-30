@@ -4,9 +4,9 @@ using System.Linq;
 
 namespace Bingo {
     public class RandomUtils {
-        Random Random { get; set; }
+        Random RNG { get; set; }
         public RandomUtils() {
-            Random = new Random();
+            RNG = new Random();
         }
         public bool[,] Choose2D (int[] rowsumsIn, int[] colsumsIn) {
             if (rowsumsIn.Sum() != colsumsIn.Sum()) {
@@ -48,7 +48,7 @@ namespace Bingo {
             var result = new bool[weights.Length];
             for (var i = 0; i < numTrues; i++) {
                 weightsum = weights.Sum();
-                var choice = Random.Next(weightsum);
+                var choice = RNG.Next(weightsum);
                 var runningSum = 0;
                 var j = 0;
                 while (runningSum <= choice) {
@@ -66,7 +66,7 @@ namespace Bingo {
         // so i'll write one myself. fortunately fisher-yates is pretty simple
         public void Shuffle<T> (T[] deck) {
             for (var i = 0; i < deck.Count(); i++) {
-                var j = Random.Next(i+1);
+                var j = RNG.Next(i+1);
                 T value = deck[j];
                 deck[j] = deck[i];
                 deck[i] = value;

@@ -87,18 +87,5 @@ namespace Bingo {
             }
             return output;
         }
-        public void test () {
-            var plates = NextBatch();
-            for (var plate = 0; plate < 6; plate++) {
-                Console.WriteLine("Plate # {0} of the batch", plate);
-                for (var row = 0; row < 3; row++) {
-                    var output = new List<string>();
-                    for (var col = 0; col < 9; col++) {
-                        output.Add(Convert.ToString(plates[plate][row, col]));
-                    }
-                    Console.WriteLine(String.Join(",", output));
-                }
-            }
-        }
     }
 }

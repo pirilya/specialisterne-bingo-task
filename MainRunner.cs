@@ -5,17 +5,17 @@ using System.IO;
 
 namespace Bingo {
     class MainRunner {
-        static void MakeFile(int numPlates, string title, string filename) {
+        static void MakeFile(int numSheets, string title, string filename) {
             var filepath = Path.Join(Directory.GetCurrentDirectory(), filename);
             using (StreamWriter writer = new StreamWriter(filepath)) {
                 var bng = new BingoNumberGenerator();
-                for (var i = 0; i < numPlates; i += 6) {
+                for (var sheetNumber = 0; sheetNumber < numSheets; sheetNumber++) {
                     var plates = bng.NextBatch();
                     writer.WriteLine("####################");
-                    writer.WriteLine("# Sheet {0,-10} #", i / 6);
+                    writer.WriteLine("# Sheet {0,-10} #", sheetNumber + 1);
                     writer.WriteLine("####################");
                     for (var plateNumber = 0; plateNumber < 6; plateNumber++) {
-                        writer.WriteLine("{0} | Plate {1}", title, i + plateNumber + 1);
+                        writer.WriteLine("{0} | Plate {1}", title, (sheetNumber * 6) + plateNumber + 1);
                         for (var row = 0; row < 3; row++) {
                             for (var col = 0; col < 9; col++) {
                                 writer.Write("{0,3}", plates[plateNumber][row,col]);
@@ -38,13 +38,16 @@ namespace Bingo {
                 if (!success || numPlates < 0) {
                     Console.WriteLine("I cannot generate {0} bingo plates, because {0} is not a positive integer.", args[0]);
                 }
-                Console.WriteLine("Generating {0} bingo plates all titled \"{1}\" in the file location \"{2}\"", args[0], args[1], args[2]);
-                Console.WriteLine("On my computer that'd take about {0} seconds.", numPlates / 100000); // let people know if they've picked a large number that'll take multiple hours
+                var numSheets = (numPlates + 5) / 6; // divided by 6, rounded up
+                Console.WriteLine("Generating {0} bingo plates ({1} sheets of 6) all titled \"{2}\" in the file location \"{3}\"", numSheets * 6, numSheets, args[1], args[2]);
+                // let people know if they've picked a large number that'll fill up their disk space and take multiple hours
+                Console.WriteLine("The output file will be about {0:N0} KB.", numPlates / 10); 
+                Console.WriteLine("On my computer that'd take about {0} seconds.", numPlates / 100000); 
                 var s = new System.Diagnostics.Stopwatch();
                 s.Start();
-                MakeFile(numPlates, args[1], args[2]);
+                MakeFile(numSheets, args[1], args[2]);
                 s.Stop();
-                Console.WriteLine("Elapsed {0} ms", s.ElapsedMilliseconds);
+                Console.WriteLine("Done! It in fact took {0} ms", s.ElapsedMilliseconds);
             }
         }
     }
