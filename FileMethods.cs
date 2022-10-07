@@ -13,11 +13,12 @@ namespace Bingo {
                     writer.WriteLine("####################");
                     writer.WriteLine("# Sheet {0,-10} #", sheetNumber + 1);
                     writer.WriteLine("####################");
-                    for (var plateNumber = 0; plateNumber < 6; plateNumber++) {
-                        writer.WriteLine("{0} | Plate {1}", title, (sheetNumber * 6) + plateNumber + 1);
-                        for (var row = 0; row < 3; row++) {
-                            for (var col = 0; col < 9; col++) {
-                                writer.Write("{0,3}", plates[plateNumber][row,col]);
+                    for (var plateNumber = 0; plateNumber < Constants.PlatesInSheet; plateNumber++) {
+                        var globalPlateNumber = (sheetNumber * Constants.PlatesInSheet) + plateNumber + 1;
+                        writer.WriteLine("{0} | Plate {1}", title, globalPlateNumber);
+                        for (var row = 0; row < Constants.PlateHeight; row++) {
+                            for (var col = 0; col < Constants.PlateWidth; col++) {
+                                writer.Write("{0,3}", plates[plateNumber].Data[row,col]);
                             }
                             writer.Write("\n");
                         }
@@ -26,15 +27,14 @@ namespace Bingo {
                 }
             }
         }
-        static List<int>[] ExtractNumbers (List<string> formattedPlate) {
-            var parsedPlate = new List<int>[9];
-            Array.Fill(parsedPlate, new List<int>());
+        static PlateNumbers ExtractNumbers (List<string> formattedPlate) {
+            var parsedPlate = new PlateNumbers();
             foreach (var line in formattedPlate) {
                 for (var col = 0; col < line.Length / 3; col++) {
                     var numberStr = line.Substring(col * 3, 3).Trim();
                     if (numberStr.Length > 0) {
                         var number = Convert.ToInt32(numberStr);
-                        parsedPlate[col].Add(number);
+                        parsedPlate.AddInColumn(number, col);
                     }
                 }
             }

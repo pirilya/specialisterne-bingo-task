@@ -3,93 +3,84 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Bingo {
-    public class BingoNumberGenerator : RandomUtils {
-
-        HashSet<List<int>[]> PreviousPlates { get; set; }
-        int[][] NumbersByColumns { get; set; }
-
-        public BingoNumberGenerator () : base() {
-            PreviousPlates = new HashSet<List<int>[]>();
-            var NumbersByColumnsList = new List<List<int>>();
-            for (var i = 0; i < 9; i++) {
-                NumbersByColumnsList.Add(Enumerable.Range(i * 10, 10).ToList());
-            }
-            NumbersByColumnsList[0].Remove(0);
-            NumbersByColumnsList[8].Add(90);
-            NumbersByColumns = NumbersByColumnsList.Select(x => x.ToArray()).ToArray();
+    public class ColumnsWithTwo {
+        public bool [,] Data;
+        public ColumnsWithTwo (RandomUtils randomizer) {
+            var twos = new int[Constants.PlatesInSheet];
+            Array.Fill(twos, Constants.TwoColumnsPerSheet);
+            Data = randomizer.Choose2D(twos, AvailableNumbers.Lengths);
         }
-        public void AddPreviousPlate (List<int>[] plate) {
-            PreviousPlates.Add(plate);
+        public bool[] GetPlate (int plateNumber) {
+            var result = new bool[Constants.PlateWidth];
+            for (var col = 0; col < Constants.PlateWidth; col++) {
+                result[col] = Data[plateNumber, col];
+            }
+            return result;
+        }
+    }
+    public class ShuffledNumbers {
+
+        int[][] Columns;
+        int[] indexes;
+        
+        public ShuffledNumbers (RandomUtils randomizer) {
+            // just setting this Columns equal to AvailableNumbers.Columns wouldn't break anything, 
+            // and it'd be slightly more efficient, but it'd go against the siloing principle
+            Columns = AvailableNumbers.Generate();
+            foreach (var column in Columns) {
+                randomizer.Shuffle(column);
+            }
+            indexes = new int[Columns.Length]; // ints have default value 0 so we don't need to initalize with a value
+        }
+        public int NextInColumn (int colNumber) {
+            return Columns[colNumber][indexes[colNumber]++];
+        }
+    }
+    // this currently has no content... it should enforce the strict length of Constants.PlatesInSheet
+    public class Sheet<T> : List<T> {
+    }
+
+    public class BingoNumberGenerator {
+        HashSet<string> PreviousPlates { get; set; }
+        RandomUtils Randomizer;
+
+        public BingoNumberGenerator () {
+            Randomizer = new RandomUtils();
+            PreviousPlates = new HashSet<string>();
+        }
+        public void AddPreviousPlate (PlateNumbers plate) {
+            PreviousPlates.Add(plate.ToFlat());
         }
         public void Clear () {
             PreviousPlates.Clear();
         }
-        List<List<int>[]> NextBatchNumbers (bool[,] ColumnsWithTwo) {
-            var result = new List<List<int>[]>();
-            for (var i = 0; i < 6; i++) {
-                result.Add(new List<int>[9]);
-            }
-            for (var col = 0; col < 9; col++) {
-                Shuffle(NumbersByColumns[col]);
-                var i = 0;
-                for (var numberOfBatch = 0; numberOfBatch < 6; numberOfBatch++) {
-                    result[numberOfBatch][col] = new List<int>();
-                    var n = ColumnsWithTwo[numberOfBatch, col]? 2 : 1;
-                    for (var m = 0; m < n; m++) {
-                        result[numberOfBatch][col].Add(NumbersByColumns[col][i]);
-                        i++;
-                    }
-                    result[numberOfBatch][col].Sort();
-                }
+        Sheet<PlateNumbers> NextBatchNumbers (ColumnsWithTwo columnsWithTwo) {
+            var numbers = new ShuffledNumbers(Randomizer);
+            var result = new Sheet<PlateNumbers>();
+            for (var i = 0; i < Constants.PlatesInSheet; i++) {
+                result.Add(new PlateNumbers(numbers, columnsWithTwo.GetPlate(i)));
             }
             foreach (var plate in result) {
                 // if just one of our generated plates is a duplicate, we have to throw out this result and start over
-                if (PreviousPlates.Contains(plate)) {
-                    return NextBatchNumbers(ColumnsWithTwo);
+                if (PreviousPlates.Contains(plate.ToFlat())) {
+                    return NextBatchNumbers(columnsWithTwo);
                 }
             }
             // but if that's not the case, we can add these 6 numbersets to the list, and return them
             foreach (var plate in result) {
-                PreviousPlates.Add(plate);
+                PreviousPlates.Add(plate.ToFlat());
             }
             return result;
         }
-        List<bool[,]> NextBatchBlanks (bool[,] ColumnsWithTwo) {
-            var result = new List<bool[,]>();
-            var initialRowsum = new int[]{4,4,4};
-            for (var i = 0; i < 6; i++) {
-                var numBlanks = new int[9];
-                for (var col = 0; col < 9; col++) {
-                    numBlanks[col] = ColumnsWithTwo[i, col] ? 1 : 2;
-                }
-                result.Add(Choose2D(initialRowsum, numBlanks));
-            }
-            return result;
-        }
-        public List<int?[,]> NextBatch () {
-            var numberOfNumbers = NumbersByColumns.Select(x => x.Length - 6).ToArray();
-            var twos = new int[]{6,6,6,6,6,6};
-            var ColumnsWithTwo = Choose2D(twos, numberOfNumbers);
+        public Sheet<Plate> NextBatch () {
+            var columnsWithTwo = new ColumnsWithTwo(Randomizer);
 
-            var numbers = NextBatchNumbers(ColumnsWithTwo);
-            var blanks = NextBatchBlanks(ColumnsWithTwo);
+            var numbers = NextBatchNumbers(columnsWithTwo);
 
-            var output = new List<int?[,]>();
-            for (var plateNumber = 0; plateNumber < 6; plateNumber++) {
-                var plate = new int?[3,9];
-                output.Add(plate);
-                for (var col = 0; col < 9; col++) {
-                    var i = 0;
-                    for (var row = 0; row < 3; row++) {
-                        if (blanks[plateNumber][row, col]) {
-                            // no need to do anything, null is the default value of a nullable
-                        } else {
-                            //Console.WriteLine("{0} {1}",numbers[plateNumber][row].Count(), i);
-                            plate[row,col] = numbers[plateNumber][col][i];
-                            i++;
-                        }
-                    }
-                }
+            var output = new Sheet<Plate>();
+            for (var i = 0; i < Constants.PlatesInSheet; i++) {
+                var blanks = new PlateBlanks(Randomizer, columnsWithTwo.GetPlate(i));
+                output.Add(new Plate(blanks, numbers[i]));
             }
             return output;
         }
