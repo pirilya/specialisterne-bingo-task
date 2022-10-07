@@ -70,5 +70,12 @@ namespace Bingo {
                 }
             }
         }
+        public int?[] GetRow(int rowNumber) {
+            var result = new int?[Constants.PlateWidth];
+            for (var col = 0; col < Constants.PlateWidth; col++) {
+                result[col] = Data[rowNumber, col];
+            }
+            return result;
+        }
     }
 }

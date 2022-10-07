@@ -4,28 +4,22 @@ using System.Linq;
 using System.IO;
 
 namespace Bingo {
-    class FileMethods {
-        public static void MakeFile (BingoNumberGenerator bng, int numSheets, string title, string filename) {
-            var filepath = Path.Join(Directory.GetCurrentDirectory(), filename);
-            using (StreamWriter writer = new StreamWriter(filepath)) {
-                for (var sheetNumber = 0; sheetNumber < numSheets; sheetNumber++) {
-                    var plates = bng.NextBatch();
-                    writer.WriteLine("####################");
-                    writer.WriteLine("# Sheet {0,-10} #", sheetNumber + 1);
-                    writer.WriteLine("####################");
-                    for (var plateNumber = 0; plateNumber < Constants.PlatesInSheet; plateNumber++) {
-                        var globalPlateNumber = (sheetNumber * Constants.PlatesInSheet) + plateNumber + 1;
-                        writer.WriteLine("{0} | Plate {1}", title, globalPlateNumber);
-                        for (var row = 0; row < Constants.PlateHeight; row++) {
-                            for (var col = 0; col < Constants.PlateWidth; col++) {
-                                writer.Write("{0,3}", plates[plateNumber].Data[row,col]);
-                            }
-                            writer.Write("\n");
-                        }
-                        writer.WriteLine("---");
-                    }
+    class SimpleFormat {
+        public static string Serialize (Sheet<Plate> plates, int sheetNumber, string title) {
+            var lines = new List<string>();
+            lines.Add("####################");
+            lines.Add(String.Format("# Sheet {0,-10} #", sheetNumber + 1));
+            lines.Add("####################");
+            for (var plateNumber = 0; plateNumber < Constants.PlatesInSheet; plateNumber++) {
+                var globalPlateNumber = (sheetNumber * Constants.PlatesInSheet) + plateNumber + 1;
+                lines.Add(String.Format("{0} | Plate {1}", title, globalPlateNumber));
+                for (var row = 0; row < Constants.PlateHeight; row++) {
+                    lines.Add(String.Join("", 
+                        plates[plateNumber].GetRow(row).Select(x => String.Format("{0,3}", x))));
                 }
+                lines.Add("---");
             }
+            return String.Join("\n", lines);
         }
         static PlateNumbers ExtractNumbers (List<string> formattedPlate) {
             var parsedPlate = new PlateNumbers();

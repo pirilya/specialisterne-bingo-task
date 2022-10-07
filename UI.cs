@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 
 namespace Bingo {
     class UI {
@@ -18,7 +19,7 @@ namespace Bingo {
             Console.WriteLine("Loading file \"{0}\"...", filename);
             try {
                 s.Start();
-                FileMethods.LoadFile(bng, filename);
+                SimpleFormat.LoadFile(bng, filename);
                 s.Stop();
                 Console.WriteLine("File loaded (It took {0} ms)", s.ElapsedMilliseconds);
                 return true;
@@ -41,7 +42,13 @@ namespace Bingo {
                 Console.WriteLine("On my computer that'd take about {0} seconds.", numPlates / 100000); 
             }
             s.Start();
-            FileMethods.MakeFile(bng, numSheets, title, filename);
+            var filepath = Path.Join(Directory.GetCurrentDirectory(), filename);
+            using (StreamWriter writer = new StreamWriter(filepath)) {
+                for (var sheetNumber = 0; sheetNumber < numSheets; sheetNumber++) {
+                    var plates = bng.NextBatch();
+                    writer.WriteLine(SimpleFormat.Serialize(plates, sheetNumber, title));
+                }
+            }
             s.Stop();
             Console.WriteLine("Done! (It took {0} ms)", s.ElapsedMilliseconds);
         }
